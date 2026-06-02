@@ -25,7 +25,7 @@ Requisitos previos
 
 Instalación del proyecto
 1. Clonar el repositorio
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/mariocanul23/spacex-dashboard.git
 2. Entrar al directorio
 cd spacex-dashboard
 3. Instalar dependencias
