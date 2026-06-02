@@ -35,9 +35,13 @@ Dependencias utilizadas
 Si se requiere instalarlas manualmente:
 
 React Leaflet y Leaflet
+
 npm install leaflet react-leaflet
+
 Generación de PDF
+
 npm install jspdf jspdf-autotable
+
 Ejecutar el proyecto
 
 Iniciar servidor de desarrollo:
