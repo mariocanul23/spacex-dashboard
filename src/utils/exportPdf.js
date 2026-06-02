@@ -2,25 +2,25 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const loadImageAsBase64 = (url) => {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.crossOrigin = "anonymous";
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
 
-        image.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = image.width;
-        canvas.height = image.height;
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
 
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0);
 
-        const dataUrl = canvas.toDataURL("image/png");
-        resolve(dataUrl);
-        };
+      const dataUrl = canvas.toDataURL("image/png");
+      resolve(dataUrl);
+    };
 
-        image.onerror = reject;
-        image.src = url;
-    });
+    image.onerror = reject;
+    image.src = url;
+  });
 };
 
 export const exportLaunchToPdf = async ({ launch, launchpad }) => {
@@ -29,15 +29,17 @@ export const exportLaunchToPdf = async ({ launch, launchpad }) => {
   const status =
     launch.success === null ? "Pendiente" : launch.success ? "Exitoso" : "Fallido";
 
+  const imageUrl = launch.links?.patch?.large || launch.links?.patch?.small;
+  let imageLoaded = false;
+
   doc.setFontSize(18);
   doc.text("Reporte de lanzamiento SpaceX", 14, 20);
-
-  const imageUrl = launch.links?.patch?.large || launch.links?.patch?.small;
 
   if (imageUrl) {
     try {
       const image = await loadImageAsBase64(imageUrl);
       doc.addImage(image, "PNG", 150, 12, 35, 35);
+      imageLoaded = true;
     } catch (error) {
       console.log("No se pudo cargar la imagen para el PDF", error);
     }
@@ -59,10 +61,22 @@ export const exportLaunchToPdf = async ({ launch, launchpad }) => {
       ["Región", launchpad?.region || "Sin región"],
       ["Latitud", launchpad?.latitude || "Sin latitud"],
       ["Longitud", launchpad?.longitude || "Sin longitud"],
+      ["Imagen", imageUrl || "Sin imagen"],
     ],
   });
 
-  const finalY = doc.lastAutoTable.finalY + 10;
+  let finalY = doc.lastAutoTable.finalY + 10;
+
+  if (imageUrl && !imageLoaded) {
+    doc.setFontSize(10);
+    doc.text(
+      "Nota: La imagen no pudo incrustarse por restricciones CORS. Se incluye la URL en la tabla.",
+      14,
+      finalY
+    );
+
+    finalY += 10;
+  }
 
   doc.setFontSize(12);
   doc.text("Detalle", 14, finalY);
@@ -139,7 +153,10 @@ export const exportMultipleLaunchesToPdf = ({ launches, launchpads }) => {
       `Estado: ${status}`,
       `Número de vuelo: ${launch.flight_number}`,
       `Ubicación: ${launchpad?.full_name || "Sin ubicación"}`,
-      `Coordenadas: ${launchpad?.latitude || "N/A"}, ${launchpad?.longitude || "N/A"}`,
+      `Coordenadas: ${launchpad?.latitude || "N/A"}, ${
+        launchpad?.longitude || "N/A"
+      }`,
+      `Imagen: ${launch.links?.patch?.large || "Sin imagen"}`,
       `Detalles: ${launch.details || "Sin detalles disponibles"}`,
     ];
 
